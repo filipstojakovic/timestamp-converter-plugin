@@ -5,7 +5,7 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>Timestamp-converter</name>
+    <name>Timestamp Converter</name>
 
     <version>1.0.0</version>
     <vendor email="filip.stojakovic1@gmail.com">Filip Stojakovic</vendor>
@@ -25,5 +25,11 @@
         <toolWindow id="Timestamp Converter"
                     anchor="right"
                     factoryClass="com.example.timestampconverter.TimestampToolWindowFactory"/>
+
+        <applicationConfigurable
+                instance="com.example.timestampconverter.TimestampSettingsConfigurable"
+                id="com.example.timestampconverter.settings"
+                displayName="Timestamp Converter"/>
     </extensions>
+
 </idea-plugin>

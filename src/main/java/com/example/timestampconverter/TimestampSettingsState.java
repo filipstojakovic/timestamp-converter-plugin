@@ -1,10 +1,7 @@
 package com.example.timestampconverter;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.Service;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.components.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,14 +12,14 @@ import java.util.List;
         name = "TimestampSettingsState",
         storages = @Storage("TimestampConverterPlugin.xml")
 )
-@Service(Service.Level.APP) // 👈 important: mark as app-level service
+@Service(Service.Level.APP)
 public final class TimestampSettingsState implements PersistentStateComponent<TimestampSettingsState> {
 
     private List<String> history = new ArrayList<>();
     private String lastSelectedZone = "UTC";
+    private String dateFormat = "dd.MM.yyyy HH:mm:ss";
 
     public static TimestampSettingsState getInstance() {
-        // ensures it's never null
         return ApplicationManager.getApplication().getService(TimestampSettingsState.class);
     }
 
@@ -36,6 +33,7 @@ public final class TimestampSettingsState implements PersistentStateComponent<Ti
     public void loadState(@NotNull TimestampSettingsState state) {
         this.history = new ArrayList<>(state.history != null ? state.history : new ArrayList<>());
         this.lastSelectedZone = state.lastSelectedZone != null ? state.lastSelectedZone : "UTC";
+        this.dateFormat = state.dateFormat != null ? state.dateFormat : "dd.MM.yyyy HH:mm:ss";
     }
 
     public List<String> getHistory() {
@@ -52,6 +50,14 @@ public final class TimestampSettingsState implements PersistentStateComponent<Ti
 
     public void setLastSelectedZone(String lastSelectedZone) {
         this.lastSelectedZone = lastSelectedZone;
+    }
+
+    public String getDateFormat() {
+        return dateFormat;
+    }
+
+    public void setDateFormat(String dateFormat) {
+        this.dateFormat = dateFormat;
     }
 
     public void saveState() {

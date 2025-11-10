@@ -1,6 +1,7 @@
 package com.example.timestampconverter;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.components.JBLabel;
@@ -36,7 +37,7 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
         List<String> zones = Arrays.stream(TimeZone.getAvailableIDs())
                 .sorted()
                 .collect(Collectors.toList());
-        JComboBox<String> zoneSelector = new JComboBox<>(zones.toArray(new String[0]));
+        JComboBox<String> zoneSelector = new ComboBox<>(zones.toArray(new String[0]));
 
         // Restore previously selected zone or default to UTC
         String savedZone = settings.getLastSelectedZone();
@@ -100,11 +101,11 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
                 ZoneId selectedZone = ZoneId.of(zoneId);
                 ZoneId systemZone = ZoneId.systemDefault();
 
-                String formattedSelected = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                String formattedSelected = DateTimeFormatter.ofPattern(settings.getDateFormat())
                         .withZone(selectedZone)
                         .format(instant);
 
-                String formattedSystem = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                String formattedSystem = DateTimeFormatter.ofPattern(settings.getDateFormat())
                         .withZone(systemZone)
                         .format(instant);
 
@@ -124,7 +125,7 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
                 historyArea.setCaretPosition(0);
 
                 // Save to persistent storage
-                settings.getHistory().add(0, result);
+                settings.getHistory().addFirst(result);
                 settings.setLastSelectedZone(zoneId);
                 settings.saveState();
             } catch (Exception ex) {

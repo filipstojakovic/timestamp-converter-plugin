@@ -15,11 +15,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
-import java.util.TimeZone;
-import java.util.stream.Collectors;
 
 public class TimestampToolWindowFactory implements ToolWindowFactory {
 
@@ -34,9 +32,15 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
         JButton convert = new JButton("Convert");
 
         // --- Timezone dropdown ---
-        List<String> zones = Arrays.stream(TimeZone.getAvailableIDs())
+        List<String> zones = ZoneId.getAvailableZoneIds().stream()
                 .sorted()
-                .collect(Collectors.toList());
+                .map(id -> {
+                    ZoneId zone = ZoneId.of(id);
+                    ZoneOffset offset = zone.getRules().getOffset(Instant.now());
+                    String offsetId = offset.getId().replace("Z", "+00:00");
+                    return String.format("%s (%s)", id, offsetId);
+                })
+                .toList();
         JComboBox<String> zoneSelector = new ComboBox<>(zones.toArray(new String[0]));
 
         // Restore previously selected zone or default to UTC
@@ -97,12 +101,14 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
                 if (ts < 10000000000L) ts *= 1000; // seconds → millis
                 Instant instant = Instant.ofEpochMilli(ts);
 
-                String zoneId = (String) zoneSelector.getSelectedItem();
-                ZoneId selectedZone = ZoneId.of(zoneId);
+                String selectedItem = (String) zoneSelector.getSelectedItem();
+                if (selectedItem == null) return;
+                String selectedZone = selectedItem.split(" ")[0]; // extract e.g. "Europe/Vienna"
+                ZoneId selectedZoneId = ZoneId.of(selectedZone);
                 ZoneId systemZone = ZoneId.systemDefault();
 
                 String formattedSelected = DateTimeFormatter.ofPattern(settings.getDateFormat())
-                        .withZone(selectedZone)
+                        .withZone(selectedZoneId)
                         .format(instant);
 
                 String formattedSystem = DateTimeFormatter.ofPattern(settings.getDateFormat())
@@ -115,7 +121,7 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
                         : inputText;
 
                 String result = cleanTs + " → " +
-                        formattedSelected + " (" + zoneId + ")" +
+                        formattedSelected + " (" + selectedZone + ")" +
                         " | " + formattedSystem + " (Local)";
 
                 // Prepend to history (latest first)
@@ -126,7 +132,7 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
 
                 // Save to persistent storage
                 settings.getHistory().addFirst(result);
-                settings.setLastSelectedZone(zoneId);
+                settings.setLastSelectedZone(selectedZone);
                 settings.saveState();
             } catch (Exception ex) {
                 historyArea.setText("Invalid timestamp.\n" + historyArea.getText());

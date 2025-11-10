@@ -1,4 +1,4 @@
-package com.example.timestampconverter;
+package com.github.filipstojakovic.timestampconverter;
 
 import com.intellij.openapi.options.Configurable;
 import org.jetbrains.annotations.Nls;

@@ -1,4 +1,4 @@
-package com.example.timestampconverter;
+package com.github.filipstojakovic.timestampconverter;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;

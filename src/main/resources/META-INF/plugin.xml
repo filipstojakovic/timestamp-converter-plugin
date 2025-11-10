@@ -1,14 +1,14 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
-    <id>com.example.timestamp-converter</id>
+    <id>com.github.filipstojakovic.timestampconverter</id>
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
     <name>Timestamp Converter</name>
 
-    <version>1.0.0</version>
-    <vendor email="filip.stojakovic1@gmail.com">Filip Stojakovic</vendor>
+    <version>0.0.3</version>
+    <vendor email="filip.stojakovic1@gmail.com" url="https://github.com/filipstojakovic/timestamp-converter-plugin">Filip Stojakovic</vendor>
 
     <description>
         A simple timestamp converter for IntelliJ IDEA that converts UNIX timestamps to readable
@@ -25,11 +25,11 @@
         <toolWindow id="Timestamp Converter"
                     anchor="right"
                     icon="/icons/timestamp.svg"
-                    factoryClass="com.example.timestampconverter.TimestampToolWindowFactory"/>
+                    factoryClass="com.github.filipstojakovic.timestampconverter.TimestampToolWindowFactory"/>
 
         <applicationConfigurable
-                instance="com.example.timestampconverter.TimestampSettingsConfigurable"
-                id="com.example.timestampconverter.settings"
+                instance="com.github.filipstojakovic.timestampconverter.TimestampSettingsConfigurable"
+                id="com.github.filipstojakovic.timestampconverter.settings"
                 displayName="Timestamp Converter"/>
     </extensions>
 

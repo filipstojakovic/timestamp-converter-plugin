@@ -1,4 +1,4 @@
-package com.example.timestampconverter;
+package com.github.filipstojakovic.timestampconverter;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.*;

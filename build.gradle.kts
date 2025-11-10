@@ -4,8 +4,8 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.7.1"
 }
 
-group = "com.example"
-version = "0.0.2"
+group = "com.github.filipstojakovic.timestampconverter"
+version = "0.0.3"
 
 repositories {
     mavenCentral()
@@ -39,10 +39,6 @@ intellijPlatform {
 }
 
 tasks {
-    patchPluginXml {
-        sinceBuild.set("241")
-        untilBuild.set("999.*")
-    }
 
     buildPlugin {
         archiveFileName.set("timestamp-converter.zip")

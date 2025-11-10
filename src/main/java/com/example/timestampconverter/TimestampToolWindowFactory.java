@@ -44,8 +44,17 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
         JComboBox<String> zoneSelector = new ComboBox<>(zones.toArray(new String[0]));
 
         // Restore previously selected zone or default to UTC
-        String savedZone = settings.getLastSelectedZone();
-        zoneSelector.setSelectedItem(savedZone != null ? savedZone : "UTC");
+        String lastZone = settings.getLastSelectedZone();
+        if (lastZone != null) {
+            for (int i = 0; i < zoneSelector.getItemCount(); i++) {
+                if (zoneSelector.getItemAt(i).startsWith(lastZone)) {
+                    zoneSelector.setSelectedIndex(i);
+                    break;
+                }
+            }
+        } else {
+            zoneSelector.setSelectedItem("UTC");
+        }
 
         // --- History area ---
         JBTextArea historyArea = new JBTextArea(15, 30);

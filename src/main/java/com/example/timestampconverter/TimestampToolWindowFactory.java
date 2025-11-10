@@ -13,6 +13,7 @@ import com.intellij.ui.content.ContentFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -29,7 +30,7 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
 
         // --- Input controls ---
         JBTextField input = new JBTextField();
-        JButton convert = new JButton("Convert");
+        JButton convertBtn = new JButton("Convert");
 
         // --- Timezone dropdown ---
         List<String> zones = ZoneId.getAvailableZoneIds().stream()
@@ -80,7 +81,7 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
         JPanel inputPanel = new JPanel(new BorderLayout(5, 5));
         inputPanel.add(new JBLabel("Timestamp:"), BorderLayout.WEST);
         inputPanel.add(input, BorderLayout.CENTER);
-        inputPanel.add(convert, BorderLayout.EAST);
+        inputPanel.add(convertBtn, BorderLayout.EAST);
 
         JPanel zonePanel = new JPanel(new BorderLayout(5, 5));
         zonePanel.add(new JBLabel("Time zone:"), BorderLayout.WEST);
@@ -103,9 +104,12 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // --- Conversion logic ---
-        convert.addActionListener(e -> {
+        ActionListener convertAction = e -> {
             try {
                 String inputText = input.getText().trim();
+                if (inputText.isEmpty()) {
+                    return;
+                }
                 long ts = Long.parseLong(inputText);
                 if (ts < 10000000000L) ts *= 1000; // seconds → millis
                 Instant instant = Instant.ofEpochMilli(ts);
@@ -146,7 +150,10 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
             } catch (Exception ex) {
                 historyArea.setText("Invalid timestamp.\n" + historyArea.getText());
             }
-        });
+        };
+        // Assign to button
+        convertBtn.addActionListener(convertAction);
+        input.addActionListener(convertAction); // Enter key pressed
 
         // --- Register content ---
         ContentFactory contentFactory = ContentFactory.getInstance();

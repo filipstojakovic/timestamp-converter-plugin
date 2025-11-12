@@ -144,7 +144,7 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
                 historyArea.setCaretPosition(0);
 
                 // Save to persistent storage
-                settings.getHistory().addFirst(result);
+                settings.getHistory().add(0, result);
                 settings.setLastSelectedZone(selectedZone);
                 settings.saveState();
             } catch (Exception ex) {

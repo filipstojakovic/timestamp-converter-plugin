@@ -7,7 +7,7 @@
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
     <name>Timestamp Converter</name>
 
-    <version>0.0.3</version>
+    <version>0.0.4</version>
     <vendor email="filip.stojakovic1@gmail.com" url="https://github.com/filipstojakovic/timestamp-converter-plugin">Filip Stojakovic</vendor>
 
     <description>

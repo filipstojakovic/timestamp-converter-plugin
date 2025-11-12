@@ -24,7 +24,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="Timestamp Converter"
                     anchor="right"
-                    icon="/icons/timestamp.svg"
+                    icon="/icons/timestamp-24.svg"
                     factoryClass="com.github.filipstojakovic.timestampconverter.TimestampToolWindowFactory"/>
 
         <applicationConfigurable

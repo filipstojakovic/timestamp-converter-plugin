@@ -6,14 +6,20 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.components.JBTextArea;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.table.JBTable;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -33,15 +39,12 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
         JButton convertBtn = new JButton("Convert");
 
         // --- Timezone dropdown ---
-        List<String> zones = ZoneId.getAvailableZoneIds().stream()
-                .sorted()
-                .map(id -> {
-                    ZoneId zone = ZoneId.of(id);
-                    ZoneOffset offset = zone.getRules().getOffset(Instant.now());
-                    String offsetId = offset.getId().replace("Z", "+00:00");
-                    return String.format("%s (%s)", id, offsetId);
-                })
-                .toList();
+        List<String> zones = ZoneId.getAvailableZoneIds().stream().sorted().map(id -> {
+            ZoneId zone = ZoneId.of(id);
+            ZoneOffset offset = zone.getRules().getOffset(Instant.now());
+            String offsetId = offset.getId().replace("Z", "+00:00");
+            return String.format("%s (%s)", id, offsetId);
+        }).toList();
         JComboBox<String> zoneSelector = new ComboBox<>(zones.toArray(new String[0]));
 
         // Restore previously selected zone or default to UTC
@@ -59,48 +62,45 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
 
         // --- History area ---
         String[] columnNames = { "Input", "Selected Zone", "System Time" };
-        javax.swing.table.DefaultTableModel model = new javax.swing.table.DefaultTableModel(columnNames, 0) {
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-        com.intellij.ui.table.JBTable historyTable = new com.intellij.ui.table.JBTable(model);
+        JBTable historyTable = new JBTable(model);
         historyTable.setCellSelectionEnabled(true);
         historyTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JPopupMenu popupMenu = new JPopupMenu();
         JMenuItem copyItem = new JMenuItem("Copy");
-        copyItem.addActionListener(e -> {
-            int row = historyTable.getSelectedRow();
-            int col = historyTable.getSelectedColumn();
-            if (row >= 0 && col >= 0) {
-                Object value = historyTable.getValueAt(row, col);
-                if (value != null) {
-                    java.awt.datatransfer.StringSelection selection = new java.awt.datatransfer.StringSelection(
-                            value.toString());
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
-                }
-            }
-        });
+        copyItem.addActionListener(e -> copySelectedCell(historyTable));
         popupMenu.add(copyItem);
 
-        historyTable.addMouseListener(new java.awt.event.MouseAdapter() {
+        // Override default copy action (Ctrl+C)
+        historyTable.getActionMap().put("copy", new AbstractAction() {
             @Override
-            public void mousePressed(java.awt.event.MouseEvent e) {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                copySelectedCell(historyTable);
+            }
+        });
+
+        historyTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     showMenu(e);
                 }
             }
 
             @Override
-            public void mouseReleased(java.awt.event.MouseEvent e) {
+            public void mouseReleased(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     showMenu(e);
                 }
             }
 
-            private void showMenu(java.awt.event.MouseEvent e) {
+            private void showMenu(MouseEvent e) {
                 int row = historyTable.rowAtPoint(e.getPoint());
                 int col = historyTable.columnAtPoint(e.getPoint());
                 if (row >= 0 && col >= 0) {
@@ -137,6 +137,7 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
                 }
             }
         }
+        resizeColumnWidth(historyTable);
 
         // --- Clear history ---
         JButton clearHistory = new JButton("Clear History");
@@ -200,14 +201,14 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
                         .format(instant);
 
                 // Remove trailing 000 if present
-                String cleanTs = (inputText.endsWith("000") && inputText.length() > 10)
-                        ? inputText.substring(0, inputText.length() - 3)
-                        : inputText;
+                String cleanTs = (inputText.endsWith("000") && inputText.length() > 10) ? inputText.substring(0,
+                        inputText.length() - 3) : inputText;
 
                 String selectedCol = formattedSelected + " (" + selectedZone + ")";
 
                 // Add to table (latest first)
                 model.insertRow(0, new Object[] { cleanTs, selectedCol, formattedSystem });
+                resizeColumnWidth(historyTable);
 
                 // Save to persistent storage
                 String storageString = cleanTs + "|||" + selectedCol + "|||" + formattedSystem;
@@ -229,5 +230,44 @@ public class TimestampToolWindowFactory implements ToolWindowFactory {
         ContentFactory contentFactory = ContentFactory.getInstance();
         Content content = contentFactory.createContent(mainPanel, "", false);
         toolWindow.getContentManager().addContent(content);
+    }
+
+    private void resizeColumnWidth(JTable table) {
+        final TableColumnModel columnModel = table.getColumnModel();
+        for (int column = 0; column < table.getColumnCount(); column++) {
+            int width = 15; // Min width
+            for (int row = 0; row < table.getRowCount(); row++) {
+                TableCellRenderer renderer = table.getCellRenderer(row, column);
+                Component comp = table.prepareRenderer(renderer, row, column);
+                width = Math.max(comp.getPreferredSize().width + 1, width);
+            }
+            // Also check header
+            TableCellRenderer headerRenderer = table.getTableHeader().getDefaultRenderer();
+            if (headerRenderer != null) {
+                Component headerComp = headerRenderer.getTableCellRendererComponent(table,
+                        table.getColumnName(column), false, false, -1, column);
+                width = Math.max(headerComp.getPreferredSize().width + 1, width);
+            }
+
+            if (width > 300)
+                width = 300;
+            columnModel.getColumn(column).setPreferredWidth(width);
+        }
+    }
+
+    private void copySelectedCell(JTable table) {
+        int row = table.getSelectedRow();
+        int col = table.getSelectedColumn();
+        if (row >= 0 && col >= 0) {
+            Object value = table.getValueAt(row, col);
+            if (value != null) {
+                String stringValue = value.toString();
+                if (stringValue.contains("(")) {
+                    stringValue = stringValue.replaceAll("\\s*\\(.*?\\)", "");
+                }
+                StringSelection selection = new StringSelection(stringValue);
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, selection);
+            }
+        }
     }
 }
